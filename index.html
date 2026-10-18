@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eksperyment: Stres</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #808080; /* Domyślny szary z PsychoPy (color=[0,0,0] w przestrzeni rgb) */
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Okno dialogowe startowe */
+        #dlg-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .dlg-box {
+            background: #f0f0f0;
+            color: #000;
+            padding: 25px;
+            border-radius: 8px;
+            width: 320px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .dlg-box h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .dlg-field {
+            margin-bottom: 12px;
+        }
+        .dlg-field label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .dlg-field input {
+            width: 100%;
+            padding: 6px;
+            font-size: 14px;
+        }
+        .dlg-buttons {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .dlg-buttons button {
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* Ekrany tekstowe */
+        .screen {
+            display: none;
+            width: 85%;
+            max-width: 1000px;
+            text-align: center;
+            font-size: 3.2vh;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+
+        /* Ekran zadania (Trening / Stres) */
+        #task-screen {
+            display: none;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Pozycjonowanie odwzorowujące jednostki 'height' z PsychoPy */
+        #pasek-container {
+            position: absolute;
+            top: 20%; /* pos=(0, 0.3) */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50vh;
+            height: 14vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #pasek-img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #feedback-text {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4.5vh;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+        }
+
+        #equation-text {
+            position: absolute;
+            top: 50%; /* pos=(0, 0) */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5vh;
+            font-weight: bold;
+        }
+
+        #timer-text {
+            position: absolute;
+            top: 60%; /* pos=(0, -0.1) */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4.5vh;
+        }
+
+        #hurry-text {
+            position: absolute;
+            top: 70%; /* pos=(-0.4, -0.2) */
+            left: 25%;
+            transform: translate(-50%, -50%);
+            font-size: 4vh;
+            color: #ffdddd;
+            max-width: 45vw;
+            text-align: center;
+        }
+
+        #dial-container {
+            position: absolute;
+            top: 70%; /* pos=(0.5, -0.2) */
+            left: 78%;
+            transform: translate(-50%, -50%);
+            width: 45vh;
+            height: 45vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #dial-img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* Przycisk pobierania na końcu */
+        .download-btn {
+            margin-top: 25px;
+            padding: 12px 24px;
+            font-size: 18px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .download-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Okno startowe (ExpInfo) -->
+    <div id="dlg-overlay">
+        <div class="dlg-box">
+            <h3>stres</h3>
+            <div class="dlg-field">
+                <label for="inp-participant">participant</label>
+                <input type="text" id="inp-participant">
+            </div>
+            <div class="dlg-field">
+                <label for="inp-session">session</label>
+                <input type="text" id="inp-session" value="001">
+            </div>
+            <div class="dlg-buttons">
+                <button id="btn-start">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ekran powitalny -->
+    <div id="welcome-screen" class="screen">Za chwilę rozpoczniesz zadanie polegające na obliczaniu wyników równań pojawiających się na ekranie.
+Zadanie składa się z części treningowej oraz właściwego bloku i łącznie zajmie około 17 minut.
+Po części treningowej będziesz mieć możliwość zadania pytań osobie prowadzącej badanie.
+Podczas wykonywania zadania będziemy rejestrować aktywność Twojego serca za pomocą elektrod umieszczonych na klatce piersiowej.
+Prosimy o ograniczenie gwałtownych ruchów w trakcie zadania, ponieważ mogą one zakłócać pomiar.
+
+<span style="font-size: 2.2vh; opacity: 0.8;">(Wciśnij spację, aby przejść dalej)</span></div>
+
+    <!-- Instrukcja treningowa -->
+    <div id="training-instr-screen" class="screen">Część treningowa. 
+
+- Prosimy o rozwiązanie kilku przykładowych równań, aby zapoznać się z przebiegiem zadania przed jego właściwą częścią.
+- Twoim zadaniem jest obliczenie wyniku równania i zaznaczenie odpowiedniej cyfry na obrotowym kole w zakresie 0 – 9. 
+
+   Cyfrę wybierasz za pomocą strzałek na klawiaturze.
+   Zatwierdzasz ją spacją i przechodzisz do kolejnego działania.
+
+- W przypadku jakichkolwiek pytań możesz zwrócić się do osoby prowadzącej badanie.
+- Część treningowa służy jedynie zapoznaniu się z zadaniem i nie podlega ocenie.
+Wciśnij spację, aby kontynuować</div>
+
+    <!-- Instrukcja bloku właściwego (Stres) -->
+    <div id="stress-instr-screen" class="screen">INSTRUKCJA
+1. Twoim zadaniem będzie rozwiązywanie prostych zadań matematycznych w pamięci.
+Na ekranie pojawią się działania (np. odejmowanie liczb), a Ty musisz podać poprawny wynik.
+
+2. Odpowiedź wybierasz za pomocą przycisków.
+Wynik podajesz tak jak w części treningowej - wybierając strzałkami odpowiednią cyfrę ( 0 – 9 ) oraz zatwierdzając ją spacją.
+
+3. Masz ograniczony czas na każdą odpowiedź.
+Twój licznik czasu będzie widoczny na ekranie w formie odliczania. Ważne, abyś zdążył/a rozwiązać równanie w podanym czasie.
+
+4. Twoja dokładność i szybkość będą oceniane.
+Na ekranie pojawią się informacje zwrotne o tym, czy Twoja odpowiedź była poprawna oraz jak Twój wynik wypada w rankingu z innymi uczestnikami. Większość uczestników osiąga w tym zadaniu wysoki poziom dokładności.
+
+5. Postaraj się pracować JAK NAJDOKŁADNIEJ I JAK NAJSZYBCIEJ.
+Twoje wyniki są na bieżąco monitorowane przez badaczy
+
+<span style="font-size: 2.2vh; opacity: 0.8;">(Wciśnij spację, aby rozpocząć)</span></div>
+
+    <!-- Ekran wykonywania zadania (wspólny dla treningu i stresu) -->
+    <div id="task-screen">
+        <div id="pasek-container">
+            <img id="pasek-img" src="" alt="Pasek">
+            <canvas id="pasek-canvas" width="400" height="110" style="display:none;"></canvas>
+        </div>
+        <div id="feedback-text"></div>
+        <div id="equation-text"></div>
+        <div id="timer-text"></div>
+        <div id="hurry-text"></div>
+        <div id="dial-container">
+            <img id="dial-img" src="" alt="Tarcza">
+            <canvas id="dial-canvas" width="350" height="350" style="display:none;"></canvas>
+        </div>
+    </div>
+
+    <!-- Ekran końcowy -->
+    <div id="end-screen" class="screen">Dziękujemy za wzięcie udziału w badaniu!
+
+Wciśnij spację, aby wyjść i pobrać wyniki.
+        <div>
+            <button class="download-btn" onclick="downloadCSV()">Pobierz wyniki (CSV)</button>
+        </div>
+    </div>
+
+<script>
+// ===================== ZMIENNE GLOBALNE I KONFIGURACJA =====================
+const expInfo = {
+    participant: String(Math.floor(Math.random() * 1000000)).padStart(6, '0'),
+    session: '001',
+    date: getFormattedDate()
+};
+
+document.getElementById('inp-participant').value = expInfo.participant;
+
+const levels = ['easy', 'medium', 'hard'];
+let czasy_trening = [];
+let sredni_czas = null;
+let aktualny_limit = null;
+
+let kolejne_poprawne = 0;
+let kolejne_bledy = 0;
+let trial_nr = 0;
+let data_rows = [];
+
+let active_digit = 1;
+let active_pasek = 14;
+const sciezka_obrazkow = 'img/';
+const sciezka_paskow = 'img2/';
+
+let fb = "";
+let hurry = "";
+
+// Zmienne stanu aplikacji
+let state = 'DIALOG'; // DIALOG, WELCOME, TRAIN_INSTR, TRAINING, STRESS_INSTR, STRESS, END
+let start_trening = 0;
+let start_stres = 0;
+let trial_start_time = 0;
+let current_eq = "";
+let current_ans = 0;
+let current_level = "";
+let animFrameId = null;
+
+// ===================== OBSŁUGA UŁAMKÓW (ODPOWIEDNIK FRACTION Z PYTHONA) =====================
+function gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b !== 0) {
+        let t = b;
+        b = a % b;
+        a = t;
+    }
+    return a;
+}
+
+class Fraction {
+    constructor(num, den = 1) {
+        if (den === 0) throw new Error("ZeroDivisionError");
+        if (den < 0) { num = -num; den = -den; }
+        const g = gcd(num, den);
+        this.numerator = num / g;
+        this.denominator = den / g;
+    }
+    add(o) { return new Fraction(this.numerator * o.denominator + o.numerator * this.denominator, this.denominator * o.denominator); }
+    sub(o) { return new Fraction(this.numerator * o.denominator - o.numerator * this.denominator, this.denominator * o.denominator); }
+    mul(o) { return new Fraction(this.numerator * o.numerator, this.denominator * o.denominator); }
+    div(o) {
+        if (o.numerator === 0) throw new Error("ZeroDivisionError");
+        return new Fraction(this.numerator * o.denominator, this.denominator * o.numerator);
+    }
+}
+
+function evaluate(tokens) {
+    const precedence = {'+': 1, '-': 1, '*': 2, '/': 2};
+    const values = [];
+    const ops = [];
+
+    function apply() {
+        const op = ops.pop();
+        const right = values.pop();
+        const left = values.pop();
+        if (op === '+') values.push(left.add(right));
+        else if (op === '-') values.push(left.sub(right));
+        else if (op === '*') values.push(left.mul(right));
+        else if (op === '/') values.push(left.div(right));
+    }
+
+    for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        if (typeof token === 'number') {
+            values.push(new Fraction(token));
+        } else {
+            while (ops.length > 0 && precedence[ops[ops.length - 1]] >= precedence[token]) {
+                apply();
+            }
+            ops.push(token);
+        }
+    }
+    while (ops.length > 0) {
+        apply();
+    }
+    return values[0];
+}
+
+function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randChoice(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function sampleIndices(n, k) {
+    const arr = Array.from({length: n}, (_, i) => i);
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, k);
+}
+
+function generate_equation(level) {
+    const max_attempts = 5000;
+    for (let attempt = 0; attempt < max_attempts; attempt++) {
+        let n, liczby = [], operatory = [];
+        if (level === 'easy') {
+            n = 2;
+            liczby = [randInt(0, 9), randInt(0, 9)];
+            operatory = [randChoice(['+', '-'])];
+        } else if (level === 'medium') {
+            n = randInt(2, 4);
+            const ile_dwu = Math.min(2, n);
+            const indices = sampleIndices(n, ile_dwu);
+            for (let i = 0; i < n; i++) {
+                if (indices.includes(i)) liczby.push(randInt(10, 99));
+                else liczby.push(randInt(0, 9));
+            }
+            for (let i = 0; i < n - 1; i++) {
+                operatory.push(randChoice(['+', '-', '*']));
+            }
+        } else if (level === 'hard') {
+            n = 4;
+            for (let i = 0; i < n; i++) liczby.push(randInt(0, 99));
+            for (let i = 0; i < 3; i++) operatory.push(randChoice(['+', '-', '*', '/']));
+        } else {
+            throw new Error("Nieznany poziom trudności");
+        }
+
+        const tokeny = [];
+        for (let i = 0; i < n; i++) {
+            tokeny.push(liczby[i]);
+            if (i < n - 1) tokeny.push(operatory[i]);
+        }
+
+        try {
+            const wynik = evaluate(tokeny);
+            if (wynik.denominator === 1 && wynik.numerator >= 0 && wynik.numerator <= 9) {
+                return {
+                    rownanie: tokeny.join(' '),
+                    wynik: wynik.numerator
+                };
+            }
+        } catch (e) {
+            continue;
+        }
+    }
+    throw new Error("Nie udało się wygenerować równania");
+}
+
+// ===================== GRAFICZNY FALLBACK (GDY BRAK PLIKÓW PNG) =====================
+function updateDialVisual() {
+    const img = document.getElementById('dial-img');
+    const canvas = document.getElementById('dial-canvas');
+    img.style.display = 'block';
+    canvas.style.display = 'none';
+    img.src = `${sciezka_obrazkow}${active_digit}.png`;
+    img.onerror = () => {
+        img.style.display = 'none';
+        canvas.style.display = 'block';
+        drawFallbackDial(active_digit);
+    };
+}
+
+function drawFallbackDial(active) {
+    const canvas = document.getElementById('dial-canvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const cx = w / 2, cy = h / 2, r = 125;
+    ctx.clearRect(0, 0, w, h);
+
+    // Tarcza główna
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 30, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    for (let i = 0; i < 10; i++) {
+        const angle = (i * 36 - 90) * (Math.PI / 180);
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+
+        ctx.beginPath();
+        ctx.arc(x, y, 22, 0, 2 * Math.PI);
+        if (i === active) {
+            ctx.fillStyle = '#ffcc00';
+            ctx.fill();
+        }
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = (i === active) ? '#000' : '#fff';
+        ctx.font = 'bold 22px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(i.toString(), x, y);
+    }
+}
+
+function updatePasekVisual() {
+    const img = document.getElementById('pasek-img');
+    const canvas = document.getElementById('pasek-canvas');
+    img.style.display = 'block';
+    canvas.style.display = 'none';
+    img.src = `${sciezka_paskow}${Math.floor(active_pasek)}.png`;
+    img.onerror = () => {
+        img.style.display = 'none';
+        canvas.style.display = 'block';
+        drawFallbackPasek(Math.floor(active_pasek));
+    };
+}
+
+function drawFallbackPasek(val) {
+    const canvas = document.getElementById('pasek-canvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Gradient czerwony -> żółty -> zielony
+    const grad = ctx.createLinearGradient(20, 0, w - 20, 0);
+    grad.addColorStop(0, '#d9534f');
+    grad.addColorStop(0.5, '#f0ad4e');
+    grad.addColorStop(1, '#5cb85c');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(20, 40, w - 40, 30);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(20, 40, w - 40, 30);
+
+    // Wskaźnik (zakres 1 - 21)
+    const clamped = Math.max(1, Math.min(21, val));
+    const pos = 20 + ((clamped - 1) / 20) * (w - 40);
+
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.moveTo(pos, 35);
+    ctx.lineTo(pos - 10, 15);
+    ctx.lineTo(pos + 10, 15);
+    ctx.closePath();
+    ctx.fill();
+}
+
+// ===================== ZARZĄDZANIE PRZEBIEGIEM BADANIA =====================
+function showOnly(id) {
+    document.querySelectorAll('.screen, #task-screen').forEach(el => el.style.display = 'none');
+    if (id) document.getElementById(id).style.display = 'block';
+}
+
+document.getElementById('btn-start').addEventListener('click', () => {
+    expInfo.participant = document.getElementById('inp-participant').value || expInfo.participant;
+    expInfo.session = document.getElementById('inp-session').value || '001';
+    document.getElementById('dlg-overlay').style.display = 'none';
+    
+    // Próba wejścia w tryb pełnoekranowy
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    }
+
+    state = 'WELCOME';
+    showOnly('welcome-screen');
+});
+
+function startTrainingPhase() {
+    state = 'TRAINING';
+    showOnly('task-screen');
+    document.getElementById('pasek-container').style.display = 'none';
+    document.getElementById('timer-text').style.display = 'none';
+    document.getElementById('hurry-text').style.display = 'none';
+    document.getElementById('feedback-text').style.top = '20%'; // pos=(0, 0.3)
+
+    start_trening = performance.now() / 1000;
+    trial_nr = 0;
+    fb = "";
+    nextTrainingTrial();
+}
+
+function nextTrainingTrial() {
+    current_level = randChoice(levels);
+    const eq = generate_equation(current_level);
+    current_eq = eq.rownanie;
+    current_ans = eq.wynik;
+
+    active_digit = 1;
+    // W PsychoPy: if trenloop.thisN == 1: fb = "" (czyli w 2. próbie czyści, ale logicznie na starcie jest puste, a potem pokazuje wynik z poprzedniej)
+    document.getElementById('equation-text').textContent = current_eq + " =";
+    document.getElementById('feedback-text').textContent = fb;
+    updateDialVisual();
+
+    trial_start_time = performance.now() / 1000;
+}
+
+function finishTrainingTrial() {
+    const now = performance.now() / 1000;
+    const czas = now - trial_start_time;
+    const poprawna = (active_digit === current_ans) ? 1 : 0;
+    trial_nr += 1;
+
+    czasy_trening.push(czas);
+    data_rows.push({
+        warunek: 'stresujacy',
+        faza: 'trening',
+        trial: trial_nr,
+        level: current_level,
+        rownanie: current_eq,
+        poprawny_wynik: current_ans,
+        odpowiedz: active_digit,
+        poprawna: poprawna,
+        czas: czas.toFixed(4),
+        limit: ''
+    });
+
+    if (poprawna === 1) {
+        fb = "Poprawnie";
+    } else {
+        fb = `Błąd. Poprawny wynik: ${current_ans}`;
+    }
+
+    const timer_trening = now - start_trening;
+    if (timer_trening >= 2 * 60) {
+        // Oblicz średnią z treningu
+        const sum = czasy_trening.reduce((a, b) => a + b, 0);
+        sredni_czas = sum / czasy_trening.length;
+        aktualny_limit = sredni_czas * 0.9; // -10%
+
+        state = 'STRESS_INSTR';
+        showOnly('stress-instr-screen');
+    } else {
+        nextTrainingTrial();
+    }
+}
+
+function startStressPhase() {
+    state = 'STRESS';
+    showOnly('task-screen');
+    document.getElementById('pasek-container').style.display = 'flex';
+    document.getElementById('timer-text').style.display = 'block';
+    document.getElementById('hurry-text').style.display = 'block';
+    document.getElementById('feedback-text').style.top = '30%'; // pos=(0, 0.2)
+
+    start_stres = performance.now() / 1000;
+    trial_nr = 0;
+    kolejne_poprawne = 0;
+    kolejne_bledy = 0;
+    fb = "";
+    hurry = "";
+    active_pasek = 14;
+
+    nextStressTrial();
+}
+
+function nextStressTrial() {
+    current_level = randChoice(levels);
+    const eq = generate_equation(current_level);
+    current_eq = eq.rownanie;
+    current_ans = eq.wynik;
+
+    active_digit = 1;
+    document.getElementById('equation-text').textContent = current_eq + " =";
+    document.getElementById('feedback-text').textContent = fb;
+    document.getElementById('hurry-text').textContent = hurry;
+
+    updateDialVisual();
+    updatePasekVisual();
+
+    trial_start_time = performance.now() / 1000;
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    animFrameId = requestAnimationFrame(updateStressFrame);
+}
+
+function updateStressFrame() {
+    if (state !== 'STRESS') return;
+    const now = performance.now() / 1000;
+    const elapsed = now - trial_start_time;
+    const display_timer = aktualny_limit - elapsed;
+
+    if (elapsed >= aktualny_limit) {
+        handleStressResponse(true); // Timeout
+        return;
+    }
+
+    document.getElementById('timer-text').textContent = `${Math.max(0, display_timer).toFixed(2)} s`;
+    animFrameId = requestAnimationFrame(updateStressFrame);
+}
+
+function handleStressResponse(isTimeout) {
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    const now = performance.now() / 1000;
+    const czas = now - trial_start_time;
+    let poprawna = 0;
+    let odp = null;
+    let timeout = isTimeout ? 1 : 0;
+
+    if (!isTimeout) {
+        odp = active_digit;
+        poprawna = (active_digit === current_ans) ? 1 : 0;
+    }
+
+    trial_nr += 1;
+
+    data_rows.push({
+        warunek: 'stresujacy',
+        faza: 'test',
+        trial: trial_nr,
+        level: current_level,
+        rownanie: current_eq,
+        poprawny_wynik: current_ans,
+        odpowiedz: odp !== null ? odp : '',
+        poprawna: poprawna,
+        czas: czas.toFixed(4),
+        limit: aktualny_limit.toFixed(4)
+    });
+
+    // Adaptacja limitu czasu
+    if (poprawna === 1) {
+        kolejne_poprawne += 1;
+        kolejne_bledy = 0;
+        if (kolejne_poprawne >= 3) {
+            aktualny_limit *= 0.9;
+            kolejne_poprawne = 0;
+        }
+    } else {
+        kolejne_bledy += 1;
+        kolejne_poprawne = 0;
+        if (kolejne_bledy >= 3) {
+            aktualny_limit *= 1.1;
+            kolejne_bledy = 0;
+        }
+    }
+
+    // Feedback
+    if (poprawna === 1) {
+        fb = "Poprawnie";
+    } else {
+        fb = `Błąd. Poprawny wynik: ${current_ans}`;
+    }
+
+    // Tekst pospieszający
+    if (timeout === 1) {
+        hurry = "KONIEC CZASU!";
+    } else if (trial_nr % 5 === 0) {
+        hurry = "PROSIMY O JAK NAJSZYBSZE WYKONYWANIE ZADANIA!";
+    } else {
+        hurry = "";
+    }
+
+    // Aktualizacja paska
+    if (poprawna === 1 && active_pasek < 21) {
+        active_pasek += 0.5;
+    } else if (poprawna === 0 && active_pasek > 1.5) {
+        active_pasek -= 1;
+    }
+
+    // Sprawdzenie czy minęło 15 minut
+    const timer_stres = now - start_stres;
+    if (timer_stres >= 15 * 60) {
+        endExperiment();
+    } else {
+        nextStressTrial();
+    }
+}
+
+function endExperiment() {
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    state = 'END';
+    showOnly('end-screen');
+    downloadCSV();
+}
+
+// ===================== OBSŁUGA KLAWIATURY =====================
+window.addEventListener('keydown', (e) => {
+    if (state === 'DIALOG') return;
+
+    if (e.key === 'Escape') {
+        endExperiment();
+        return;
+    }
+
+    if (state === 'WELCOME' && e.code === 'Space') {
+        e.preventDefault();
+        state = 'TRAIN_INSTR';
+        showOnly('training-instr-screen');
+    } else if (state === 'TRAIN_INSTR' && e.code === 'Space') {
+        e.preventDefault();
+        startTrainingPhase();
+    } else if (state === 'TRAINING') {
+        if (e.key === 'ArrowLeft') {
+            active_digit = (active_digit + 9) % 10;
+            updateDialVisual();
+        } else if (e.key === 'ArrowRight') {
+            active_digit = (active_digit + 1) % 10;
+            updateDialVisual();
+        } else if (e.code === 'Space') {
+            e.preventDefault();
+            finishTrainingTrial();
+        }
+    } else if (state === 'STRESS_INSTR' && e.code === 'Space') {
+        e.preventDefault();
+        startStressPhase();
+    } else if (state === 'STRESS') {
+        if (e.key === 'ArrowLeft') {
+            active_digit = (active_digit + 9) % 10;
+            updateDialVisual();
+        } else if (e.key === 'ArrowRight') {
+            active_digit = (active_digit + 1) % 10;
+            updateDialVisual();
+        } else if (e.code === 'Space') {
+            e.preventDefault();
+            handleStressResponse(false);
+        }
+    } else if (state === 'END') {
+        if (['Space', 'ArrowLeft', 'ArrowRight', 'KeyY', 'KeyN'].includes(e.code)) {
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+    }
+});
+
+// ===================== ZAPIS DANYCH DO CSV =====================
+function getFormattedDate() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}h${pad(d.getMinutes())}.${pad(d.getSeconds())}`;
+}
+
+function downloadCSV() {
+    if (data_rows.length === 0) return;
+    const headers = ['warunek', 'faza', 'trial', 'level', 'rownanie', 'poprawny_wynik', 'odpowiedz', 'poprawna', 'czas', 'limit'];
+    const csvLines = [
+        headers.join(','),
+        ...data_rows.map(row => headers.map(h => `"${row[h] !== undefined ? row[h] : ''}"`).join(','))
+    ];
+    
+    const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `wyniki_${expInfo.participant}_${expInfo.date}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

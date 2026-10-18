@@ -823,7 +823,6 @@ function downloadCSV() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
-<script>
 function finishMist() {
     if (window.opener && !window.opener.closed) {
         window.opener.postMessage("MIST_DONE", "*");

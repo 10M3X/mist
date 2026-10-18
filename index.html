@@ -744,6 +744,8 @@ function endExperiment() {
     state = 'END';
     showOnly('end-screen');
     downloadCSV();
+
+    setTimeout(finishMist, 800);
 }
 
 // ===================== OBSŁUGA KLAWIATURY =====================
@@ -820,6 +822,14 @@ function downloadCSV() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+<script>
+function finishMist() {
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage("MIST_DONE", "*");
+    }
+
+    window.close();
 }
 </script>
 </body>

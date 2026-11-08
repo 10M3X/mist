@@ -14,7 +14,7 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #808080; /* Domyślny szary z PsychoPy (color=[0,0,0] w przestrzeni rgb) */
+            background-color: #808080; /* Domyślny szary z PsychoPy (color=[0,0,0] w rgb) */
             color: white;
             font-family: Arial, sans-serif;
             overflow: hidden;
@@ -23,64 +23,33 @@
             align-items: center;
         }
 
-        /* Okno dialogowe startowe */
-        #dlg-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        .dlg-box {
-            background: #f0f0f0;
-            color: #000;
-            padding: 25px;
-            border-radius: 8px;
-            width: 320px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .dlg-box h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        .dlg-field {
-            margin-bottom: 12px;
-        }
-        .dlg-field label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-        .dlg-field input {
-            width: 100%;
-            padding: 6px;
-            font-size: 14px;
-        }
-        .dlg-buttons {
-            text-align: right;
-            margin-top: 20px;
-        }
-        .dlg-buttons button {
-            padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        /* Ekrany tekstowe */
+        /* Ekrany tekstowe - dopasowane tak, aby nic nie ucinało na żadnej rozdzielczości */
         .screen {
             display: none;
-            width: 85%;
-            max-width: 1000px;
+            width: 88%;
+            max-width: 960px;
+            max-height: 92vh;
+            overflow-y: auto;
             text-align: center;
-            font-size: 3.2vh;
-            line-height: 1.5;
-            white-space: pre-line;
+            font-size: clamp(14px, 2.3vh, 22px);
+            line-height: 1.4;
+            padding: 2vh 2vw;
+        }
+        .screen h2 {
+            margin: 0 0 2vh 0;
+            font-size: clamp(18px, 3vh, 28px);
+            letter-spacing: 1px;
+        }
+        .screen p {
+            margin: 0 0 1.8vh 0;
+        }
+        .screen .hint {
+            margin-top: 3vh;
+            font-size: clamp(13px, 2vh, 18px);
+            opacity: 0.85;
         }
 
-        /* Ekran zadania (Trening / Stres) */
+        /* Ekran wykonywania zadania (Trening / Stres) */
         #task-screen {
             display: none;
             position: relative;
@@ -109,7 +78,7 @@
             position: absolute;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 4.5vh;
+            font-size: 4.2vh;
             font-weight: bold;
             text-align: center;
             width: 100%;
@@ -137,9 +106,10 @@
             top: 70%; /* pos=(-0.4, -0.2) */
             left: 25%;
             transform: translate(-50%, -50%);
-            font-size: 4vh;
+            font-size: 3.8vh;
+            font-weight: bold;
             color: #ffdddd;
-            max-width: 45vw;
+            max-width: 42vw;
             text-align: center;
         }
 
@@ -158,118 +128,77 @@
             max-width: 100%;
             max-height: 100%;
         }
-
-        /* Przycisk pobierania na końcu */
-        .download-btn {
-            margin-top: 25px;
-            padding: 12px 24px;
-            font-size: 18px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .download-btn:hover {
-            background: #218838;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Okno startowe (ExpInfo) -->
-    <div id="dlg-overlay">
-        <div class="dlg-box">
-            <h3>stres</h3>
-            <div class="dlg-field">
-                <label for="inp-participant">participant</label>
-                <input type="text" id="inp-participant">
-            </div>
-            <div class="dlg-field">
-                <label for="inp-session">session</label>
-                <input type="text" id="inp-session" value="001">
-            </div>
-            <div class="dlg-buttons">
-                <button id="btn-start">OK</button>
-            </div>
-        </div>
+    <!-- Ekran powitalny -->
+    <div id="welcome-screen" class="screen" style="display: block;">
+        <p>Za chwilę rozpoczniesz zadanie polegające na obliczaniu wyników równań pojawiających się na ekranie.</p>
+        <p>Zadanie składa się z krótkiej części treningowej oraz właściwego bloku i łącznie zajmie około 8 minut.</p>
+        <p>Prosimy o wykonywanie zadania w spokojnym miejscu oraz o nieodświeżanie i niezamykanie okna przeglądarki w trakcie trwania badania.</p>
+        <div class="hint">(Wciśnij spację, aby przejść dalej)</div>
     </div>
 
-    <!-- Ekran powitalny -->
-    <div id="welcome-screen" class="screen">Za chwilę rozpoczniesz zadanie polegające na obliczaniu wyników równań pojawiających się na ekranie.
-Zadanie składa się z części treningowej oraz właściwego bloku i łącznie zajmie około 17 minut.
-Po części treningowej będziesz mieć możliwość zadania pytań osobie prowadzącej badanie.
-Podczas wykonywania zadania będziemy rejestrować aktywność Twojego serca za pomocą elektrod umieszczonych na klatce piersiowej.
-Prosimy o ograniczenie gwałtownych ruchów w trakcie zadania, ponieważ mogą one zakłócać pomiar.
-
-<span style="font-size: 2.2vh; opacity: 0.8;">(Wciśnij spację, aby przejść dalej)</span></div>
-
     <!-- Instrukcja treningowa -->
-    <div id="training-instr-screen" class="screen">Część treningowa. 
-
-- Prosimy o rozwiązanie kilku przykładowych równań, aby zapoznać się z przebiegiem zadania przed jego właściwą częścią.
-- Twoim zadaniem jest obliczenie wyniku równania i zaznaczenie odpowiedniej cyfry na obrotowym kole w zakresie 0 – 9. 
-
-   Cyfrę wybierasz za pomocą strzałek na klawiaturze.
-   Zatwierdzasz ją spacją i przechodzisz do kolejnego działania.
-
-- W przypadku jakichkolwiek pytań możesz zwrócić się do osoby prowadzącej badanie.
-- Część treningowa służy jedynie zapoznaniu się z zadaniem i nie podlega ocenie.
-Wciśnij spację, aby kontynuować</div>
+    <div id="training-instr-screen" class="screen">
+        <h2>Część treningowa</h2>
+        <p>- Prosimy o rozwiązanie kilku przykładowych równań, aby zapoznać się z przebiegiem zadania przed jego właściwą częścią.</p>
+        <p>- Twoim zadaniem jest obliczenie wyniku równania i zaznaczenie odpowiedniej cyfry na obrotowym kole w zakresie 0 – 9.</p>
+        <p>Cyfrę wybierasz za pomocą strzałek (lewo / prawo) na klawiaturze.<br>Zatwierdzasz ją spacją i przechodzisz do kolejnego działania.</p>
+        <p>- Część treningowa służy jedynie zapoznaniu się z zadaniem i nie podlega ocenie.</p>
+        <div class="hint">Wciśnij spację, aby kontynuować</div>
+    </div>
 
     <!-- Instrukcja bloku właściwego (Stres) -->
-    <div id="stress-instr-screen" class="screen">INSTRUKCJA
-1. Twoim zadaniem będzie rozwiązywanie prostych zadań matematycznych w pamięci.
-Na ekranie pojawią się działania (np. odejmowanie liczb), a Ty musisz podać poprawny wynik.
+    <div id="stress-instr-screen" class="screen">
+        <h2>INSTRUKCJA</h2>
+        <p><strong>1. Twoim zadaniem będzie rozwiązywanie prostych zadań matematycznych w pamięci.</strong><br>
+        Na ekranie pojawią się działania (np. odejmowanie liczb), a Ty musisz podać poprawny wynik.</p>
 
-2. Odpowiedź wybierasz za pomocą przycisków.
-Wynik podajesz tak jak w części treningowej - wybierając strzałkami odpowiednią cyfrę ( 0 – 9 ) oraz zatwierdzając ją spacją.
+        <p><strong>2. Odpowiedź wybierasz za pomocą przycisków.</strong><br>
+        Wynik podajesz tak jak w części treningowej – wybierając strzałkami odpowiednią cyfrę ( 0 – 9 ) oraz zatwierdzając ją spacją.</p>
 
-3. Masz ograniczony czas na każdą odpowiedź.
-Twój licznik czasu będzie widoczny na ekranie w formie odliczania. Ważne, abyś zdążył/a rozwiązać równanie w podanym czasie.
+        <p><strong>3. Masz ograniczony czas na każdą odpowiedź.</strong><br>
+        Twój licznik czasu będzie widoczny na ekranie w formie odliczania. Ważne, abyś zdążył/a rozwiązać równanie w podanym czasie.</p>
 
-4. Twoja dokładność i szybkość będą oceniane.
-Na ekranie pojawią się informacje zwrotne o tym, czy Twoja odpowiedź była poprawna oraz jak Twój wynik wypada w rankingu z innymi uczestnikami. Większość uczestników osiąga w tym zadaniu wysoki poziom dokładności.
+        <p><strong>4. Twoja dokładność i szybkość będą oceniane.</strong><br>
+        Na ekranie pojawią się informacje zwrotne o tym, czy Twoja odpowiedź była poprawna oraz jak Twój wynik wypada w rankingu z innymi uczestnikami. Większość uczestników osiąga w tym zadaniu wysoki poziom dokładności.</p>
 
-5. Postaraj się pracować JAK NAJDOKŁADNIEJ I JAK NAJSZYBCIEJ.
-Twoje wyniki są na bieżąco monitorowane przez badaczy
+        <p><strong>5. Postaraj się pracować JAK NAJDOKŁADNIEJ I JAK NAJSZYBCIEJ.</strong><br>
+        Twoje wyniki są na bieżąco monitorowane przez badaczy.</p>
 
-<span style="font-size: 2.2vh; opacity: 0.8;">(Wciśnij spację, aby rozpocząć)</span></div>
+        <div class="hint">(Wciśnij spację, aby rozpocząć)</div>
+    </div>
 
     <!-- Ekran wykonywania zadania (wspólny dla treningu i stresu) -->
     <div id="task-screen">
         <div id="pasek-container">
-            <img id="pasek-img" src="" alt="Pasek">
-            <canvas id="pasek-canvas" width="400" height="110" style="display:none;"></canvas>
+            <img id="pasek-img" src="" alt="Pasek" style="display:none;">
+            <canvas id="pasek-canvas" width="400" height="110"></canvas>
         </div>
         <div id="feedback-text"></div>
         <div id="equation-text"></div>
         <div id="timer-text"></div>
         <div id="hurry-text"></div>
         <div id="dial-container">
-            <img id="dial-img" src="" alt="Tarcza">
-            <canvas id="dial-canvas" width="350" height="350" style="display:none;"></canvas>
+            <img id="dial-img" src="" alt="Tarcza" style="display:none;">
+            <canvas id="dial-canvas" width="350" height="350"></canvas>
         </div>
     </div>
 
     <!-- Ekran końcowy -->
-    <div id="end-screen" class="screen">Dziękujemy za wzięcie udziału w badaniu!
-
-Wciśnij spację, aby wyjść i pobrać wyniki.
-        <div>
-            <button class="download-btn" onclick="downloadCSV()">Pobierz wyniki (CSV)</button>
-        </div>
+    <div id="end-screen" class="screen">
+        <h2>Dziękujemy za wykonanie tej części badania!</h2>
+        <p>Za chwilę nastąpi automatyczny powrót do ankiety.</p>
+        <div class="hint">(Wciśnij spację, aby zamknąć to okno i wrócić do ankiety)</div>
     </div>
 
 <script>
 // ===================== ZMIENNE GLOBALNE I KONFIGURACJA =====================
-const expInfo = {
-    participant: String(Math.floor(Math.random() * 1000000)).padStart(6, '0'),
-    session: '001',
-    date: getFormattedDate()
-};
-
-document.getElementById('inp-participant').value = expInfo.participant;
+const CZAS_TRENINGU_Z_INSTRUKCJA = 2 * 60; // 2 minuty (120 s) łącznie na instrukcje i trening
+const MIN_PROB_TRENINGOWYCH = 3;           // Min. 3 próby, aby wyliczyć średni czas reakcji
+const CZAS_BLOKU_STRESU = 6 * 60;          // 6 minut (360 s) właściwego zadania MIST
 
 const levels = ['easy', 'medium', 'hard'];
 let czasy_trening = [];
@@ -279,19 +208,22 @@ let aktualny_limit = null;
 let kolejne_poprawne = 0;
 let kolejne_bledy = 0;
 let trial_nr = 0;
-let data_rows = [];
 
 let active_digit = 1;
 let active_pasek = 14;
 const sciezka_obrazkow = 'img/';
 const sciezka_paskow = 'img2/';
 
+// Flagi określające, czy zewnętrzne obrazki są dostępne
+let dialImagesAvailable = true;
+let pasekImagesAvailable = true;
+
 let fb = "";
 let hurry = "";
 
-// Zmienne stanu aplikacji
-let state = 'DIALOG'; // DIALOG, WELCOME, TRAIN_INSTR, TRAINING, STRESS_INSTR, STRESS, END
-let start_trening = 0;
+// Natychmiastowy start w stanie WELCOME i uruchomienie licznika czasu części treningowej
+let state = 'WELCOME'; // WELCOME, TRAIN_INSTR, TRAINING, STRESS_INSTR, STRESS, END
+let start_trening = performance.now() / 1000;
 let start_stres = 0;
 let trial_start_time = 0;
 let current_eq = "";
@@ -425,18 +357,30 @@ function generate_equation(level) {
     throw new Error("Nie udało się wygenerować równania");
 }
 
-// ===================== GRAFICZNY FALLBACK (GDY BRAK PLIKÓW PNG) =====================
+// ===================== RYSOWANIE TARCZY (0-9) I PASKA =====================
 function updateDialVisual() {
     const img = document.getElementById('dial-img');
     const canvas = document.getElementById('dial-canvas');
-    img.style.display = 'block';
-    canvas.style.display = 'none';
-    img.src = `${sciezka_obrazkow}${active_digit}.png`;
-    img.onerror = () => {
+
+    // Zawsze rysujemy tarczę na canvasie jako pewne zabezpieczenie
+    drawFallbackDial(active_digit);
+
+    if (!dialImagesAvailable) {
         img.style.display = 'none';
         canvas.style.display = 'block';
-        drawFallbackDial(active_digit);
+        return;
+    }
+
+    img.onload = () => {
+        img.style.display = 'block';
+        canvas.style.display = 'none';
     };
+    img.onerror = () => {
+        dialImagesAvailable = false;
+        img.style.display = 'none';
+        canvas.style.display = 'block';
+    };
+    img.src = `${sciezka_obrazkow}${active_digit}.png`;
 }
 
 function drawFallbackDial(active) {
@@ -446,29 +390,33 @@ function drawFallbackDial(active) {
     const cx = w / 2, cy = h / 2, r = 125;
     ctx.clearRect(0, 0, w, h);
 
-    // Tarcza główna
+    // Okrąg zewnętrzny tarczy
     ctx.beginPath();
-    ctx.arc(cx, cy, r + 30, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#fff';
+    ctx.arc(cx, cy, r + 32, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 3;
     ctx.stroke();
 
+    // Cyfry 0-9 rozmieszczone na kole
     for (let i = 0; i < 10; i++) {
         const angle = (i * 36 - 90) * (Math.PI / 180);
         const x = cx + r * Math.cos(angle);
         const y = cy + r * Math.sin(angle);
 
         ctx.beginPath();
-        ctx.arc(x, y, 22, 0, 2 * Math.PI);
+        ctx.arc(x, y, 24, 0, 2 * Math.PI);
         if (i === active) {
             ctx.fillStyle = '#ffcc00';
             ctx.fill();
+        } else {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.fill();
         }
-        ctx.strokeStyle = '#fff';
+        ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        ctx.fillStyle = (i === active) ? '#000' : '#fff';
+        ctx.fillStyle = (i === active) ? '#000000' : '#ffffff';
         ctx.font = 'bold 22px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -479,14 +427,27 @@ function drawFallbackDial(active) {
 function updatePasekVisual() {
     const img = document.getElementById('pasek-img');
     const canvas = document.getElementById('pasek-canvas');
-    img.style.display = 'block';
-    canvas.style.display = 'none';
-    img.src = `${sciezka_paskow}${Math.floor(active_pasek)}.png`;
-    img.onerror = () => {
+    const pasekIndex = Math.floor(active_pasek);
+
+    // Zawsze aktualizujemy pasek na canvasie jako zabezpieczenie
+    drawFallbackPasek(pasekIndex);
+
+    if (!pasekImagesAvailable) {
         img.style.display = 'none';
         canvas.style.display = 'block';
-        drawFallbackPasek(Math.floor(active_pasek));
+        return;
+    }
+
+    img.onload = () => {
+        img.style.display = 'block';
+        canvas.style.display = 'none';
     };
+    img.onerror = () => {
+        pasekImagesAvailable = false;
+        img.style.display = 'none';
+        canvas.style.display = 'block';
+    };
+    img.src = `${sciezka_paskow}${pasekIndex}.png`;
 }
 
 function drawFallbackPasek(val) {
@@ -495,7 +456,7 @@ function drawFallbackPasek(val) {
     const w = canvas.width, h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    // Gradient czerwony -> żółty -> zielony
+    // Pasek postępu: czerwony -> żółty -> zielony
     const grad = ctx.createLinearGradient(20, 0, w - 20, 0);
     grad.addColorStop(0, '#d9534f');
     grad.addColorStop(0.5, '#f0ad4e');
@@ -503,19 +464,29 @@ function drawFallbackPasek(val) {
 
     ctx.fillStyle = grad;
     ctx.fillRect(20, 40, w - 40, 30);
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.strokeRect(20, 40, w - 40, 30);
 
-    // Wskaźnik (zakres 1 - 21)
+    // Wskaźnik średniej grupy (stały na poziomie ok. 80%)
+    const avgPos = 20 + 0.8 * (w - 40);
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.moveTo(avgPos, 72);
+    ctx.lineTo(avgPos - 8, 90);
+    ctx.lineTo(avgPos + 8, 90);
+    ctx.closePath();
+    ctx.fill();
+
+    // Wskaźnik badanego (zakres 1 - 21)
     const clamped = Math.max(1, Math.min(21, val));
     const pos = 20 + ((clamped - 1) / 20) * (w - 40);
 
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.moveTo(pos, 35);
-    ctx.lineTo(pos - 10, 15);
-    ctx.lineTo(pos + 10, 15);
+    ctx.moveTo(pos, 38);
+    ctx.lineTo(pos - 10, 16);
+    ctx.lineTo(pos + 10, 16);
     ctx.closePath();
     ctx.fill();
 }
@@ -526,20 +497,6 @@ function showOnly(id) {
     if (id) document.getElementById(id).style.display = 'block';
 }
 
-document.getElementById('btn-start').addEventListener('click', () => {
-    expInfo.participant = document.getElementById('inp-participant').value || expInfo.participant;
-    expInfo.session = document.getElementById('inp-session').value || '001';
-    document.getElementById('dlg-overlay').style.display = 'none';
-    
-    // Próba wejścia w tryb pełnoekranowy
-    if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-    }
-
-    state = 'WELCOME';
-    showOnly('welcome-screen');
-});
-
 function startTrainingPhase() {
     state = 'TRAINING';
     showOnly('task-screen');
@@ -548,7 +505,6 @@ function startTrainingPhase() {
     document.getElementById('hurry-text').style.display = 'none';
     document.getElementById('feedback-text').style.top = '20%'; // pos=(0, 0.3)
 
-    start_trening = performance.now() / 1000;
     trial_nr = 0;
     fb = "";
     nextTrainingTrial();
@@ -561,7 +517,10 @@ function nextTrainingTrial() {
     current_ans = eq.wynik;
 
     active_digit = 1;
-    // W PsychoPy: if trenloop.thisN == 1: fb = "" (czyli w 2. próbie czyści, ale logicznie na starcie jest puste, a potem pokazuje wynik z poprzedniej)
+    // W oryginalnym kodzie: if trenloop.thisN == 1: fb = ""
+    if (trial_nr === 1) {
+        fb = "";
+    }
     document.getElementById('equation-text').textContent = current_eq + " =";
     document.getElementById('feedback-text').textContent = fb;
     updateDialVisual();
@@ -576,18 +535,6 @@ function finishTrainingTrial() {
     trial_nr += 1;
 
     czasy_trening.push(czas);
-    data_rows.push({
-        warunek: 'stresujacy',
-        faza: 'trening',
-        trial: trial_nr,
-        level: current_level,
-        rownanie: current_eq,
-        poprawny_wynik: current_ans,
-        odpowiedz: active_digit,
-        poprawna: poprawna,
-        czas: czas.toFixed(4),
-        limit: ''
-    });
 
     if (poprawna === 1) {
         fb = "Poprawnie";
@@ -596,8 +543,8 @@ function finishTrainingTrial() {
     }
 
     const timer_trening = now - start_trening;
-    if (timer_trening >= 2 * 60) {
-        // Oblicz średnią z treningu
+    // Koniec treningu po upływie 2 minut (razem z instrukcjami) i wykonaniu min. 3 prób
+    if (timer_trening >= CZAS_TRENINGU_Z_INSTRUKCJA && czasy_trening.length >= MIN_PROB_TRENINGOWYCH) {
         const sum = czasy_trening.reduce((a, b) => a + b, 0);
         sredni_czas = sum / czasy_trening.length;
         aktualny_limit = sredni_czas * 0.9; // -10%
@@ -635,6 +582,10 @@ function nextStressTrial() {
     current_ans = eq.wynik;
 
     active_digit = 1;
+    // W oryginalnym kodzie: if stresloop.thisN == 1: fb = ""
+    if (trial_nr === 1) {
+        fb = "";
+    }
     document.getElementById('equation-text').textContent = current_eq + " =";
     document.getElementById('feedback-text').textContent = fb;
     document.getElementById('hurry-text').textContent = hurry;
@@ -665,32 +616,16 @@ function updateStressFrame() {
 function handleStressResponse(isTimeout) {
     if (animFrameId) cancelAnimationFrame(animFrameId);
     const now = performance.now() / 1000;
-    const czas = now - trial_start_time;
     let poprawna = 0;
-    let odp = null;
     let timeout = isTimeout ? 1 : 0;
 
     if (!isTimeout) {
-        odp = active_digit;
         poprawna = (active_digit === current_ans) ? 1 : 0;
     }
 
     trial_nr += 1;
 
-    data_rows.push({
-        warunek: 'stresujacy',
-        faza: 'test',
-        trial: trial_nr,
-        level: current_level,
-        rownanie: current_eq,
-        poprawny_wynik: current_ans,
-        odpowiedz: odp !== null ? odp : '',
-        poprawna: poprawna,
-        czas: czas.toFixed(4),
-        limit: aktualny_limit.toFixed(4)
-    });
-
-    // Adaptacja limitu czasu
+    // Adaptacja limitu czasu (-10% po 3 poprawnych, +10% po 3 błędach)
     if (poprawna === 1) {
         kolejne_poprawne += 1;
         kolejne_bledy = 0;
@@ -714,7 +649,7 @@ function handleStressResponse(isTimeout) {
         fb = `Błąd. Poprawny wynik: ${current_ans}`;
     }
 
-    // Tekst pospieszający
+    // Tekst pospieszający co 5 prób lub przy przekroczeniu czasu
     if (timeout === 1) {
         hurry = "KONIEC CZASU!";
     } else if (trial_nr % 5 === 0) {
@@ -730,9 +665,9 @@ function handleStressResponse(isTimeout) {
         active_pasek -= 1;
     }
 
-    // Sprawdzenie czy minęło 15 minut
+    // Koniec stresu po 6 minutach
     const timer_stres = now - start_stres;
-    if (timer_stres >= 15 * 60) {
+    if (timer_stres >= CZAS_BLOKU_STRESU) {
         endExperiment();
     } else {
         nextStressTrial();
@@ -743,15 +678,23 @@ function endExperiment() {
     if (animFrameId) cancelAnimationFrame(animFrameId);
     state = 'END';
     showOnly('end-screen');
-    downloadCSV();
 
-    setTimeout(finishMist, 800);
+    if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+    }
+
+    setTimeout(finishMist, 1200);
+}
+
+function finishMist() {
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage("MIST_DONE", "*");
+    }
+    window.close();
 }
 
 // ===================== OBSŁUGA KLAWIATURY =====================
 window.addEventListener('keydown', (e) => {
-    if (state === 'DIALOG') return;
-
     if (e.key === 'Escape') {
         endExperiment();
         return;
@@ -759,6 +702,9 @@ window.addEventListener('keydown', (e) => {
 
     if (state === 'WELCOME' && e.code === 'Space') {
         e.preventDefault();
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        }
         state = 'TRAIN_INSTR';
         showOnly('training-instr-screen');
     } else if (state === 'TRAIN_INSTR' && e.code === 'Space') {
@@ -789,47 +735,11 @@ window.addEventListener('keydown', (e) => {
             e.preventDefault();
             handleStressResponse(false);
         }
-    } else if (state === 'END') {
-        if (['Space', 'ArrowLeft', 'ArrowRight', 'KeyY', 'KeyN'].includes(e.code)) {
-            if (document.fullscreenElement) {
-                document.exitFullscreen().catch(() => {});
-            }
-        }
+    } else if (state === 'END' && ['Space', 'ArrowLeft', 'ArrowRight', 'KeyY', 'KeyN'].includes(e.code)) {
+        e.preventDefault();
+        finishMist();
     }
 });
-
-// ===================== ZAPIS DANYCH DO CSV =====================
-function getFormattedDate() {
-    const d = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}h${pad(d.getMinutes())}.${pad(d.getSeconds())}`;
-}
-
-function downloadCSV() {
-    if (data_rows.length === 0) return;
-    const headers = ['warunek', 'faza', 'trial', 'level', 'rownanie', 'poprawny_wynik', 'odpowiedz', 'poprawna', 'czas', 'limit'];
-    const csvLines = [
-        headers.join(','),
-        ...data_rows.map(row => headers.map(h => `"${row[h] !== undefined ? row[h] : ''}"`).join(','))
-    ];
-    
-    const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `wyniki_${expInfo.participant}_${expInfo.date}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-function finishMist() {
-    if (window.opener && !window.opener.closed) {
-        window.opener.postMessage("MIST_DONE", "*");
-    }
-
-    window.close();
-}
 </script>
 </body>
 </html>

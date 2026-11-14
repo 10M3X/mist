@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Eksperyment: Stres</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #808080;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Ekrany tekstowe */
+        .screen {
+            display: none;
+            width: 90%;
+            max-width: 900px;
+            max-height: 92vh;
+            overflow-y: auto;
+            text-align: center;
+            font-size: clamp(14px, 2.2vh, 20px);
+            line-height: 1.45;
+            padding: 2vh 3vw;
+        }
+        .screen h2 {
+            margin: 0 0 2vh 0;
+            font-size: clamp(18px, 3vh, 26px);
+            letter-spacing: 1px;
+        }
+        .screen p {
+            margin: 0 0 1.6vh 0;
+        }
+        .btn-action {
+            display: inline-block;
+            margin-top: 2.5vh;
+            padding: 12px 30px;
+            font-size: clamp(15px, 2.2vh, 20px);
+            font-weight: bold;
+            background-color: #ffcc00;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            touch-action: manipulation;
+        }
+        .btn-action:active {
+            transform: scale(0.97);
+            background-color: #e6b800;
+        }
+
+        /* Ekran wykonywania zadania */
+        #task-screen {
+            display: none;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* ================= UKŁAD DESKTOP / EKRANY SZEROKIE ================= */
+        @media (min-width: 769px) {
+            #pasek-container {
+                position: absolute;
+                top: 17%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 65vh;
+                height: 18vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            #feedback-text {
+                position: absolute;
+                top: 32%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 4vh;
+                font-weight: bold;
+                text-align: center;
+                width: 100%;
+            }
+            #equation-text {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 5vh;
+                font-weight: bold;
+            }
+            #timer-text {
+                position: absolute;
+                top: 60%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 4.5vh;
+            }
+            #hurry-text {
+                position: absolute;
+                top: 70%;
+                left: 25%;
+                transform: translate(-50%, -50%);
+                font-size: 3.5vh;
+                font-weight: bold;
+                color: #ffdddd;
+                max-width: 42vw;
+                text-align: center;
+            }
+            #dial-container {
+                position: absolute;
+                top: 70%;
+                left: 78%;
+                transform: translate(-50%, -50%);
+                width: 42vh;
+                height: 42vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            .mobile-controls {
+                margin-top: 10px;
+                display: flex;
+                gap: 10px;
+            }
+        }
+
+        /* ================= UKŁAD MOBILNY (SMARTFONY W PIONIE) ================= */
+        @media (max-width: 768px) {
+            #task-screen {
+                display: none;
+                flex-direction: column;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1.5vh 2vw;
+            }
+            #pasek-container {
+                position: relative;
+                width: 95vw;
+                height: 12vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            #feedback-text {
+                position: relative;
+                font-size: 3vh;
+                font-weight: bold;
+                text-align: center;
+                min-height: 4vh;
+            }
+            #hurry-text {
+                position: relative;
+                font-size: 2.2vh;
+                font-weight: bold;
+                color: #ffdddd;
+                text-align: center;
+                min-height: 3vh;
+            }
+            #equation-text {
+                position: relative;
+                font-size: 4.8vh;
+                font-weight: bold;
+                margin: 0.5vh 0;
+            }
+            #timer-text {
+                position: relative;
+                font-size: 3.5vh;
+                font-weight: bold;
+                color: #ffeedd;
+                margin-bottom: 0.5vh;
+            }
+            #dial-container {
+                position: relative;
+                width: 80vw;
+                max-width: 300px;
+                height: auto;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .mobile-controls {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                gap: 12px;
+                margin-top: 8px;
+            }
+        }
+
+        /* Stylizacja przycisków dotykowych pod tarczą */
+        .ctrl-btn {
+            background-color: #333333;
+            color: #ffffff;
+            border: 2px solid #ffffff;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .ctrl-btn-submit {
+            background-color: #28a745;
+            flex-grow: 1;
+            max-width: 150px;
+        }
+        .ctrl-btn:active {
+            transform: scale(0.94);
+            background-color: #ffcc00;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ekran powitalny -->
+    <div id="welcome-screen" class="screen" style="display: block;">
+        <p>Za chwilę rozpoczniesz zadanie polegające na obliczaniu wyników równań pojawiających się na ekranie.</p>
+        <p>Zadanie składa się z krótkiej części treningowej (10 przykładów) oraz 6-minutowego bloku właściwego.</p>
+        <p>Prosimy o wykonywanie zadania w spokojnym miejscu oraz o nieodświeżanie i niezamykanie okna przeglądarki w trakcie trwania badania.</p>
+        <button class="btn-action" onclick="advanceFromWelcome()">Dalej (Spacja)</button>
+    </div>
+
+    <!-- Instrukcja treningowa -->
+    <div id="training-instr-screen" class="screen">
+        <h2>Część treningowa</h2>
+        <p>- Prosimy o rozwiązanie 10 przykładowych równań, aby zapoznać się z przebiegiem zadania przed jego właściwą częścią.</p>
+        <p>- Twoim zadaniem jest obliczenie wyniku równania i zaznaczenie odpowiedniej cyfry na obrotowym kole w zakresie 0 – 9.</p>
+        <p>Cyfrę wybierasz za pomocą strzałek na klawiaturze/ekranie lub <strong>dotykając cyfry bezpośrednio na kole</strong>.<br>Następnie zatwierdzasz ją przyciskiem <strong>ZATWIERDŹ</strong> (lub spacją).</p>
+        <p>- Część treningowa służy jedynie zapoznaniu się z zadaniem i nie podlega ocenie.</p>
+        <button class="btn-action" onclick="advanceFromTrainingInstr()">Rozpocznij trening</button>
+    </div>
+
+    <!-- Instrukcja bloku właściwego (Stres) -->
+    <div id="stress-instr-screen" class="screen">
+        <h2>INSTRUKCJA</h2>
+        <p><strong>1. Twoim zadaniem będzie rozwiązywanie prostych zadań matematycznych w pamięci.</strong><br>
+        Na ekranie pojawią się działania (np. odejmowanie liczb), a Ty musisz podać poprawny wynik.</p>
+
+        <p><strong>2. Odpowiedź wybierasz za pomocą przycisków lub dotykając tarczy.</strong><br>
+        Wynik podajesz tak jak w części treningowej – wybierając odpowiednią cyfrę ( 0 – 9 ) oraz zatwierdzając ją.</p>
+
+        <p><strong>3. Masz ograniczony czas na każdą odpowiedź.</strong><br>
+        Twój licznik czasu będzie widoczny na ekranie w formie odliczania. Ważne, abyś zdążył/a rozwiązać równanie w podanym czasie.</p>
+
+        <p><strong>4. Twoja dokładność i szybkość będą oceniane.</strong><br>
+        Na ekranie pojawią się informacje zwrotne o tym, czy Twoja odpowiedź była poprawna oraz jak Twój wynik wypada w rankingu z innymi uczestnikami. Większość uczestników osiąga w tym zadaniu wysoki poziom dokładności.</p>
+
+        <p><strong>5. Postaraj się pracować JAK NAJDOKŁADNIEJ I JAK NAJSZYBCIEJ.</strong><br>
+        Twoje wyniki są na bieżąco monitorowane przez badaczy.</p>
+
+        <button class="btn-action" onclick="advanceFromStressInstr()">Rozpocznij właściwy test</button>
+    </div>
+
+    <!-- Ekran wykonywania zadania (wspólny dla treningu i stresu) -->
+    <div id="task-screen">
+        <div id="pasek-container">
+            <canvas id="pasek-canvas" width="540" height="150"></canvas>
+        </div>
+        <div id="feedback-text"></div>
+        <div id="hurry-text"></div>
+        <div id="equation-text"></div>
+        <div id="timer-text"></div>
+        <div id="dial-container">
+            <canvas id="dial-canvas" width="320" height="320"></canvas>
+            <div class="mobile-controls">
+                <button class="ctrl-btn" onclick="handleDialMove(-1)">◀</button>
+                <button class="ctrl-btn ctrl-btn-submit" onclick="handleSubmitAction()">ZATWIERDŹ</button>
+                <button class="ctrl-btn" onclick="handleDialMove(1)">▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ekran końcowy -->
+    <div id="end-screen" class="screen">
+        <h2>Dziękujemy za wykonanie tej części badania!</h2>
+        <p>Za chwilę nastąpi automatyczny powrót do ankiety.</p>
+        <button class="btn-action" onclick="finishMist()">Wróć do ankiety</button>
+    </div>
+
+<script>
+// ===================== KONFIGURACJA ZAPISU WYNIKÓW =====================
+// Jeśli używasz Arkusza Google (Apps Script), wklej tutaj swój link URL:
+const GOOGLE_SHEETS_WEBHOOK_URL = ""; 
+
+// Pobranie ID badanego z adresu URL (np. ?participant=123) lub wygenerowanie losowego
+const urlParams = new URLSearchParams(window.location.search);
+const participantId = urlParams.get('participant') || urlParams.get('id') || String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+
+// ===================== ZMIENNE GLOBALNE I KONFIGURACJA =====================
+const LICZBA_ZADAN_TRENINGU = 10; // 10 zadań w części treningowej
+const CZAS_BLOKU_STRESU = 360;    // 6 minut (360 s) na część właściwą
+
+const levels = ['easy', 'medium', 'hard'];
+let czasy_trening = [];
+let sredni_czas = null;
+let aktualny_limit = null;
+
+// Zmienne wynikowe MIST dla uczestnika
+let mist_responses = 0; // Liczba udzielonych odpowiedzi
+let mist_correct = 0;   // Liczba poprawnych odpowiedzi
+let mist_rts = [];      // Tablica czasów reakcji (do obliczenia mediany)
+let finalResults = null;
+
+let kolejne_poprawne = 0;
+let kolejne_bledy = 0;
+let trial_nr = 0;
+
+let active_digit = 1;
+let active_pasek = 14;
+
+let fb = "";
+let hurry = "";
+
+let state = 'WELCOME'; // WELCOME, TRAIN_INSTR, TRAINING, STRESS_INSTR, STRESS, END
+let start_stres = 0;
+let trial_start_time = 0;
+let current_eq = "";
+let current_ans = 0;
+let current_level = "";
+let animFrameId = null;
+
+// ===================== FUNKCJA OBLICZAJĄCA MEDIANĘ =====================
+function calculateMedian(arr) {
+    if (!arr || arr.length === 0) return 0;
+    const sorted = [...arr].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 !== 0
+        ? sorted[mid]
+        : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+// ===================== OBSŁUGA UŁAMKÓW =====================
+function gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b !== 0) {
+        let t = b;
+        b = a % b;
+        a = t;
+    }
+    return a;
+}
+
+class Fraction {
+    constructor(num, den = 1) {
+        if (den === 0) throw new Error("ZeroDivisionError");
+        if (den < 0) { num = -num; den = -den; }
+        const g = gcd(num, den);
+        this.numerator = num / g;
+        this.denominator = den / g;
+    }
+    add(o) { return new Fraction(this.numerator * o.denominator + o.numerator * this.denominator, this.denominator * o.denominator); }
+    sub(o) { return new Fraction(this.numerator * o.denominator - o.numerator * this.denominator, this.denominator * o.denominator); }
+    mul(o) { return new Fraction(this.numerator * o.numerator, this.denominator * o.denominator); }
+    div(o) {
+        if (o.numerator === 0) throw new Error("ZeroDivisionError");
+        return new Fraction(this.numerator * o.denominator, this.denominator * o.numerator);
+    }
+}
+
+function evaluate(tokens) {
+    const precedence = {'+': 1, '-': 1, '*': 2, '/': 2};
+    const values = [];
+    const ops = [];
+
+    function apply() {
+        const op = ops.pop();
+        const right = values.pop();
+        const left = values.pop();
+        if (op === '+') values.push(left.add(right));
+        else if (op === '-') values.push(left.sub(right));
+        else if (op === '*') values.push(left.mul(right));
+        else if (op === '/') values.push(left.div(right));
+    }
+
+    for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        if (typeof token === 'number') {
+            values.push(new Fraction(token));
+        } else {
+            while (ops.length > 0 && precedence[ops[ops.length - 1]] >= precedence[token]) {
+                apply();
+            }
+            ops.push(token);
+        }
+    }
+    while (ops.length > 0) {
+        apply();
+    }
+    return values[0];
+}
+
+function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randChoice(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function sampleIndices(n, k) {
+    const arr = Array.from({length: n}, (_, i) => i);
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, k);
+}
+
+function generate_equation(level) {
+    const max_attempts = 5000;
+    for (let attempt = 0; attempt < max_attempts; attempt++) {
+        let n, liczby = [], operatory = [];
+        if (level === 'easy') {
+            n = 2;
+            liczby = [randInt(0, 9), randInt(0, 9)];
+            operatory = [randChoice(['+', '-'])];
+        } else if (level === 'medium') {
+            n = randInt(2, 4);
+            const ile_dwu = Math.min(2, n);
+            const indices = sampleIndices(n, ile_dwu);
+            for (let i = 0; i < n; i++) {
+                if (indices.includes(i)) liczby.push(randInt(10, 99));
+                else liczby.push(randInt(0, 9));
+            }
+            for (let i = 0; i < n - 1; i++) {
+                operatory.push(randChoice(['+', '-', '*']));
+            }
+        } else if (level === 'hard') {
+            n = 4;
+            for (let i = 0; i < n; i++) liczby.push(randInt(0, 99));
+            for (let i = 0; i < 3; i++) operatory.push(randChoice(['+', '-', '*', '/']));
+        } else {
+            throw new Error("Nieznany poziom trudności");
+        }
+
+        const tokeny = [];
+        for (let i = 0; i < n; i++) {
+            tokeny.push(liczby[i]);
+            if (i < n - 1) tokeny.push(operatory[i]);
+        }
+
+        try {
+            const wynik = evaluate(tokeny);
+            if (wynik.denominator === 1 && wynik.numerator >= 0 && wynik.numerator <= 9) {
+                return {
+                    rownanie: tokeny.join(' '),
+                    wynik: wynik.numerator
+                };
+            }
+        } catch (e) {
+            continue;
+        }
+    }
+    throw new Error("Nie udało się wygenerować równania");
+}
+
+// ===================== RYSOWANIE TARCZY I DOTYKOWA INTERAKCJA =====================
+const dialCanvas = document.getElementById('dial-canvas');
+
+function updateDialVisual() {
+    drawDial(active_digit);
+}
+
+function drawDial(active) {
+    const ctx = dialCanvas.getContext('2d');
+    const w = dialCanvas.width, h = dialCanvas.height;
+    const cx = w / 2, cy = h / 2, r = 115;
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 28, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    for (let i = 0; i < 10; i++) {
+        const angle = (i * 36 - 90) * (Math.PI / 180);
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+
+        ctx.beginPath();
+        ctx.arc(x, y, 22, 0, 2 * Math.PI);
+        if (i === active) {
+            ctx.fillStyle = '#ffcc00';
+            ctx.fill();
+        } else {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+            ctx.fill();
+        }
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = (i === active) ? '#000000' : '#ffffff';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(i.toString(), x, y);
+    }
+}
+
+dialCanvas.addEventListener('pointerdown', (e) => {
+    const rect = dialCanvas.getBoundingClientRect();
+    const scaleX = dialCanvas.width / rect.width;
+    const scaleY = dialCanvas.height / rect.height;
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
+
+    const cx = dialCanvas.width / 2;
+    const cy = dialCanvas.height / 2;
+    const r = 115;
+
+    for (let i = 0; i < 10; i++) {
+        const angle = (i * 36 - 90) * (Math.PI / 180);
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        const dist = Math.hypot(clickX - x, clickY - y);
+
+        if (dist <= 30) {
+            active_digit = i;
+            updateDialVisual();
+            break;
+        }
+    }
+});
+
+// ===================== RYSOWANIE PASKA Z PODPISAMI =====================
+function updatePasekVisual() {
+    const canvas = document.getElementById('pasek-canvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const barX = 60;
+    const barW = w - 120;
+    const barY = 58;
+    const barH = 30;
+
+    const grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    grad.addColorStop(0, '#d9534f');
+    grad.addColorStop(0.5, '#f0ad4e');
+    grad.addColorStop(1, '#5cb85c');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(barX, barY, barW, barH);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(barX, barY, barW, barH);
+
+    // 1. CZARNA STRZAŁKA (dół) + "Większość badanych"
+    const avgPos = barX + 0.8 * barW;
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.moveTo(avgPos, barY + barH + 3);
+    ctx.lineTo(avgPos - 10, barY + barH + 22);
+    ctx.lineTo(avgPos + 10, barY + barH + 22);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#000000';
+    const avgLabelX = Math.max(85, Math.min(w - 85, avgPos));
+    ctx.fillText('Większość badanych', avgLabelX, barY + barH + 26);
+
+    // 2. BIAŁA STRZAŁKA (góra) + "Twój wynik"
+    const clamped = Math.max(1, Math.min(21, active_pasek));
+    const pos = barX + ((clamped - 1) / 20) * barW;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(pos, barY - 3);
+    ctx.lineTo(pos - 10, barY - 22);
+    ctx.lineTo(pos + 10, barY - 22);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = '#ffffff';
+    const userLabelX = Math.max(55, Math.min(w - 55, pos));
+    ctx.fillText('Twój wynik', userLabelX, barY - 26);
+}
+
+// ===================== PRZEPŁYW EKSPERYMENTU =====================
+function showOnly(id) {
+    document.querySelectorAll('.screen, #task-screen').forEach(el => el.style.display = 'none');
+    if (id) {
+        const el = document.getElementById(id);
+        if (id === 'task-screen') {
+            el.style.display = (window.innerWidth <= 768) ? 'flex' : 'block';
+        } else {
+            el.style.display = 'block';
+        }
+    }
+}
+
+function advanceFromWelcome() {
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    }
+    state = 'TRAIN_INSTR';
+    showOnly('training-instr-screen');
+}
+
+function advanceFromTrainingInstr() {
+    state = 'TRAINING';
+    showOnly('task-screen');
+    document.getElementById('pasek-container').style.display = 'none';
+    document.getElementById('timer-text').style.display = 'none';
+    document.getElementById('hurry-text').style.display = 'none';
+    document.getElementById('feedback-text').style.top = (window.innerWidth > 768) ? '20%' : 'auto';
+
+    trial_nr = 0;
+    czasy_trening = [];
+    fb = "";
+    nextTrainingTrial();
+}
+
+function advanceFromStressInstr() {
+    state = 'STRESS';
+    showOnly('task-screen');
+    document.getElementById('pasek-container').style.display = 'flex';
+    document.getElementById('timer-text').style.display = 'block';
+    document.getElementById('hurry-text').style.display = 'block';
+    document.getElementById('feedback-text').style.top = (window.innerWidth > 768) ? '32%' : 'auto';
+
+    start_stres = performance.now() / 1000;
+    trial_nr = 0;
+    kolejne_poprawne = 0;
+    kolejne_bledy = 0;
+
+    // Zerowanie statystyk MIST na starcie bloku właściwego
+    mist_responses = 0;
+    mist_correct = 0;
+    mist_rts = [];
+
+    fb = "";
+    hurry = "";
+    active_pasek = 14;
+
+    nextStressTrial();
+}
+
+function endTrainingPhase() {
+    if (czasy_trening.length > 0) {
+        const sum = czasy_trening.reduce((a, b) => a + b, 0);
+        sredni_czas = sum / czasy_trening.length;
+    } else {
+        sredni_czas = 5.0;
+    }
+    aktualny_limit = sredni_czas * 0.9; // -10%
+
+    state = 'STRESS_INSTR';
+    showOnly('stress-instr-screen');
+}
+
+function nextTrainingTrial() {
+    current_level = randChoice(levels);
+    const eq = generate_equation(current_level);
+    current_eq = eq.rownanie;
+    current_ans = eq.wynik;
+
+    active_digit = 1;
+    document.getElementById('equation-text').textContent = current_eq + " =";
+    document.getElementById('feedback-text').textContent = fb;
+    updateDialVisual();
+
+    trial_start_time = performance.now() / 1000;
+}
+
+function finishTrainingTrial() {
+    const now = performance.now() / 1000;
+    const czas = now - trial_start_time;
+    const poprawna = (active_digit === current_ans) ? 1 : 0;
+    trial_nr += 1;
+
+    czasy_trening.push(czas);
+    fb = (poprawna === 1) ? "Poprawnie" : `Błąd. Poprawny wynik: ${current_ans}`;
+
+    if (trial_nr >= LICZBA_ZADAN_TRENINGU) {
+        endTrainingPhase();
+    } else {
+        nextTrainingTrial();
+    }
+}
+
+function nextStressTrial() {
+    current_level = randChoice(levels);
+    const eq = generate_equation(current_level);
+    current_eq = eq.rownanie;
+    current_ans = eq.wynik;
+
+    active_digit = 1;
+    document.getElementById('equation-text').textContent = current_eq + " =";
+    document.getElementById('feedback-text').textContent = fb;
+    document.getElementById('hurry-text').textContent = hurry;
+
+    updateDialVisual();
+    updatePasekVisual();
+
+    trial_start_time = performance.now() / 1000;
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    animFrameId = requestAnimationFrame(updateStressFrame);
+}
+
+function updateStressFrame() {
+    if (state !== 'STRESS') return;
+    const now = performance.now() / 1000;
+
+    if (now - start_stres >= CZAS_BLOKU_STRESU) {
+        endExperiment();
+        return;
+    }
+
+    const elapsed = now - trial_start_time;
+    const display_timer = aktualny_limit - elapsed;
+
+    if (elapsed >= aktualny_limit) {
+        handleStressResponse(true); // Timeout
+        return;
+    }
+
+    document.getElementById('timer-text').textContent = `${Math.max(0, display_timer).toFixed(2)} s`;
+    animFrameId = requestAnimationFrame(updateStressFrame);
+}
+
+function handleStressResponse(isTimeout) {
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    const now = performance.now() / 1000;
+    const czas = now - trial_start_time;
+    let poprawna = 0;
+    let timeout = isTimeout ? 1 : 0;
+
+    // Zliczanie wskaźników dla udzielonych odpowiedzi
+    if (!isTimeout) {
+        mist_responses += 1;
+        mist_rts.push(czas);
+        if (active_digit === current_ans) {
+            poprawna = 1;
+            mist_correct += 1;
+        }
+    }
+
+    trial_nr += 1;
+
+    // Adaptacja limitu czasu
+    if (poprawna === 1) {
+        kolejne_poprawne += 1;
+        kolejne_bledy = 0;
+        if (kolejne_poprawne >= 3) {
+            aktualny_limit *= 0.9;
+            kolejne_poprawne = 0;
+        }
+    } else {
+        kolejne_bledy += 1;
+        kolejne_poprawne = 0;
+        if (kolejne_bledy >= 3) {
+            aktualny_limit *= 1.1;
+            kolejne_bledy = 0;
+        }
+    }
+
+    fb = (poprawna === 1) ? "Poprawnie" : `Błąd. Poprawny wynik: ${current_ans}`;
+
+    if (timeout === 1) {
+        hurry = "KONIEC CZASU!";
+    } else if (trial_nr % 5 === 0) {
+        hurry = "PROSIMY O JAK NAJSZYBSZE WYKONYWANIE ZADANIA!";
+    } else {
+        hurry = "";
+    }
+
+    if (poprawna === 1 && active_pasek < 21) {
+        active_pasek += 0.5;
+    } else if (poprawna === 0 && active_pasek > 1.5) {
+        active_pasek -= 1;
+    }
+
+    if (now - start_stres >= CZAS_BLOKU_STRESU) {
+        endExperiment();
+    } else {
+        nextStressTrial();
+    }
+}
+
+// ===================== PODSUMOWANIE I WYSYŁKA WYNIKÓW =====================
+function computeAndSaveMetrics() {
+    const mist_rt_median = Number(calculateMedian(mist_rts).toFixed(3));
+    const mist_accuracy = mist_responses > 0
+        ? Number(((mist_correct / mist_responses) * 100).toFixed(2))
+        : 0;
+
+    finalResults = {
+        participant_id: participantId,
+        mist_responses: mist_responses,
+        mist_correct: mist_correct,
+        mist_rt_median: mist_rt_median,
+        mist_accuracy: mist_accuracy
+    };
+
+    // 1. Zapis w localStorage przeglądarki (dostępny dla ankiety na tej samej domenie)
+    try {
+        localStorage.setItem('mist_results', JSON.stringify(finalResults));
+    } catch (e) {}
+
+    // 2. Wysłanie do Arkusza Google (jeśli podano adres Webhooka)
+    if (GOOGLE_SHEETS_WEBHOOK_URL) {
+        fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(finalResults)
+        }).catch(() => {});
+    }
+}
+
+function endExperiment() {
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    if (state === 'END') return;
+    state = 'END';
+
+    computeAndSaveMetrics();
+    showOnly('end-screen');
+
+    if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+    }
+
+    setTimeout(finishMist, 1500);
+}
+
+function finishMist() {
+    const payload = {
+        type: "MIST_RESULTS",
+        mist_responses: finalResults ? finalResults.mist_responses : 0,
+        mist_correct: finalResults ? finalResults.mist_correct : 0,
+        mist_rt_median: finalResults ? finalResults.mist_rt_median : 0,
+        mist_accuracy: finalResults ? finalResults.mist_accuracy : 0
+    };
+
+    // Jeśli zadanie otwarto w nowej karcie z Qualtricsa
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(payload, "*");
+        window.opener.postMessage("MIST_DONE", "*");
+        window.close();
+    } 
+    // Jeśli zadanie jest osadzone wewnątrz pytania w Qualtricsie (iframe)
+    else if (window.parent && window.parent !== window) {
+        window.parent.postMessage(payload, "*");
+        window.parent.postMessage("MIST_DONE", "*");
+    }
+}
+
+// ===================== KONTROLA ZARÓWNO DOTYKIEM JAK I KLAWIATURĄ =====================
+function handleDialMove(dir) {
+    if (dir === -1) {
+        active_digit = (active_digit + 9) % 10;
+    } else {
+        active_digit = (active_digit + 1) % 10;
+    }
+    updateDialVisual();
+}
+
+function handleSubmitAction() {
+    if (state === 'TRAINING') {
+        finishTrainingTrial();
+    } else if (state === 'STRESS') {
+        handleStressResponse(false);
+    }
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        endExperiment();
+        return;
+    }
+
+    if (state === 'WELCOME' && e.code === 'Space') {
+        e.preventDefault();
+        advanceFromWelcome();
+    } else if (state === 'TRAIN_INSTR' && e.code === 'Space') {
+        e.preventDefault();
+        advanceFromTrainingInstr();
+    } else if (state === 'TRAINING') {
+        if (e.key === 'ArrowLeft') handleDialMove(-1);
+        else if (e.key === 'ArrowRight') handleDialMove(1);
+        else if (e.code === 'Space') {
+            e.preventDefault();
+            handleSubmitAction();
+        }
+    } else if (state === 'STRESS_INSTR' && e.code === 'Space') {
+        e.preventDefault();
+        advanceFromStressInstr();
+    } else if (state === 'STRESS') {
+        if (e.key === 'ArrowLeft') handleDialMove(-1);
+        else if (e.key === 'ArrowRight') handleDialMove(1);
+        else if (e.code === 'Space') {
+            e.preventDefault();
+            handleSubmitAction();
+        }
+    } else if (state === 'END' && e.code === 'Space') {
+        e.preventDefault();
+        finishMist();
+    }
+});
+
+window.addEventListener('resize', () => {
+    if (state === 'TRAINING' || state === 'STRESS') {
+        showOnly('task-screen');
+        updateDialVisual();
+        updatePasekVisual();
+    }
+});
+</script>
+</body>
+</html>
